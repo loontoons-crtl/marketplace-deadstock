@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+body { @apply bg-paper text-ink font-sans antialiased; }
+h1, h2, h3 { @apply font-display tracking-tight; }
+:focus-visible { outline: 2px solid #2F4A3A; outline-offset: 2px; }
+input, select, textarea { font-size: 16px; } /* below 16px iOS zooms the page on focus */
+@media (min-width: 640px) { input, select, textarea { font-size: 0.875rem; } }
+
+/* In the components layer so utilities (rounded-full, p-0, h-11…) can override them. */
+@layer components {
+.btn { @apply inline-flex select-none items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 160ms var(--ease-out);
+  touch-action: manipulation; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { @apply bg-forest text-white hover:bg-[#243a2d]; }
+.btn-outline { @apply border border-ink/25 text-ink hover:bg-ink/5; }
+.btn-light { @apply bg-white text-ink hover:bg-sand; }
+.btn-ghost-light { @apply border border-white/40 text-white hover:bg-white/10; }
+.field { @apply rounded-md border border-line bg-white px-3 py-2 text-sm; }
+
+/* Storefront type */
+.eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.18em]; }
+.serif-title { @apply font-serif font-normal tracking-[-0.01em]; }
+}
+
+/* Scroll reveal: content rises in once, when it enters the viewport. */
+.reveal { opacity: 0; transform: translateY(18px);
+  transition: opacity 800ms var(--ease-out), transform 900ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms); }
+.reveal[data-shown] { opacity: 1; transform: none; }
+
+/* Hero slider */
+@keyframes hero-zoom { from { transform: scale(1.09); } to { transform: scale(1); } }
+@keyframes hero-line { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes hero-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.hero-slide { transition: opacity 1100ms var(--ease-in-out), visibility 0s linear 1100ms; }
+.hero-slide[data-active] { transition: opacity 1100ms var(--ease-in-out), visibility 0s; }
+.hero-slide[data-active] .hero-img { animation: hero-zoom 9s linear both; }
+.hero-slide[data-active] .hero-line > span { animation: hero-line 1000ms var(--ease-out) both; animation-delay: calc(250ms + var(--i, 0) * 110ms); }
+.hero-slide[data-active] .hero-rise { animation: hero-rise 900ms var(--ease-out) both; animation-delay: calc(450ms + var(--i, 0) * 90ms); }
+.hero-slide:not([data-active]) .hero-line > span { transform: translateY(105%); }
+.hero-slide:not([data-active]) .hero-rise { opacity: 0; }
+.hero-progress { transform-origin: left; animation: hero-progress var(--dur, 7000ms) linear both; }
+.fade-in { animation: fade-in 450ms var(--ease-out) both; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .reveal { transform: none; }
+  .hero-slide[data-active] .hero-img, .hero-slide[data-active] .hero-line > span, .hero-slide[data-active] .hero-rise { animation: none; }
+  .fade-in { animation: none; }
+}
