@@ -1,39 +1,5 @@
 let appPromise;
 
-async function ensureDefaultAdmin() {
-  const { User } = await import('../server/src/models/User.js');
-  const { SellerProfile } = await import('../server/src/models/SellerProfile.js');
-  const bcrypt = (await import('bcryptjs')).default;
-
-  const existing = await User.findOne({ role: 'admin' });
-  if (existing) return;
-
-  const passwordHash = await bcrypt.hash('password123', 12);
-  let user = await User.findOne({ email: 'tmtanmay11@gmail.com' });
-  if (user) {
-    user.role = 'admin';
-    user.status = 'active';
-    user.passwordHash = passwordHash;
-    await user.save();
-  } else {
-    user = await User.create({
-      name: 'Admin',
-      email: 'tmtanmay11@gmail.com',
-      phone: '+918088107520',
-      passwordHash,
-      role: 'admin',
-      status: 'active',
-      phoneVerifiedAt: new Date(),
-    });
-    await SellerProfile.create({
-      user: user._id,
-      displayName: 'Admin',
-      sellerType: 'Individual',
-      city: 'Bengaluru',
-    });
-  }
-}
-
 async function getApp() {
   if (!appPromise) {
     appPromise = (async () => {
@@ -48,7 +14,7 @@ async function getApp() {
       const { connectDb } = await import('../server/src/db.js');
       const { createApp } = await import('../server/src/app.js');
       const { Category } = await import('../server/src/models/Category.js');
-      const { seedPricing, seedReference, seedSamples } = await import('../server/scripts/seedLib.js');
+      const { ensureDefaultAdmin, seedPricing, seedReference, seedSamples } = await import('../server/scripts/seedLib.js');
 
       await connectDb(config.mongoUri);
       if ((await Category.countDocuments()) === 0) {

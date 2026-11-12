@@ -84,3 +84,26 @@ export async function seedSamples() {
   }
   return SAMPLE_LISTINGS.length;
 }
+
+export async function ensureDefaultAdmin() {
+  if (await User.exists({ role: 'admin' })) return;
+  const passwordHash = await bcrypt.hash('password123', 12);
+  let user = await User.findOne({ $or: [{ email: 'tanmaylunia311@gmail.com' }, { email: 'tmtanmay11@gmail.com' }, { phone: '+918088107520' }] });
+  if (user) {
+    user.role = 'admin';
+    user.status = 'active';
+    user.passwordHash = passwordHash;
+    await user.save();
+  } else {
+    user = await User.create({
+      name: 'Admin',
+      email: 'tanmaylunia311@gmail.com',
+      phone: '+918088107520',
+      passwordHash,
+      role: 'admin',
+      status: 'active',
+      phoneVerifiedAt: new Date(),
+    });
+    await SellerProfile.create({ user: user._id, displayName: 'Admin', sellerType: 'Individual', city: 'Bengaluru' });
+  }
+}
