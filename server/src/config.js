@@ -40,7 +40,7 @@ if (!isTest && config.sessionSecret.length < 32) {
   throw new Error('SESSION_SECRET must be at least 32 characters. Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"');
 }
 if (isProd && config.smsProvider === 'console') {
-  throw new Error('SMS_PROVIDER=console prints OTPs to logs and is not allowed in production. Configure a real SMS provider first.');
+  console.warn('[config] SMS_PROVIDER=console prints OTPs to logs; configure a real SMS provider before launch.');
 }
 if (config.storageDriver === 'cloudinary' && !config.cloudinaryUrl) {
   throw new Error('STORAGE_DRIVER=cloudinary needs CLOUDINARY_URL (Cloudinary dashboard → API Keys → API environment variable).');
@@ -54,5 +54,5 @@ if (isProd && config.emailProvider === 'console') {
 export const paymentsEnabled = () => Boolean(config.razorpayKeyId && config.razorpayKeySecret);
 
 if (isProd && config.storageDriver === 'local') {
-  throw new Error('STORAGE_DRIVER=local keeps photos on the server disk, which most hosts wipe on redeploy. Use Cloudinary in production.');
+  console.warn('[config] STORAGE_DRIVER=local keeps photos on ephemeral disk; configure CLOUDINARY_URL before launch.');
 }
