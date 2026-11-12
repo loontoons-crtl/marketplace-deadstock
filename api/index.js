@@ -1,16 +1,22 @@
-import { config } from '../server/src/config.js';
-import { connectDb } from '../server/src/db.js';
-import { createApp } from '../server/src/app.js';
-import { Category } from '../server/src/models/Category.js';
-import { seedPricing, seedReference, seedSamples } from '../server/scripts/seedLib.js';
-
 let appPromise;
 
 async function getApp() {
   if (!appPromise) {
     appPromise = (async () => {
+      if (!process.env.MONGODB_URI) {
+        throw new Error('Missing MONGODB_URI environment variable in Vercel Project Settings.');
+      }
+      if (!process.env.SESSION_SECRET) {
+        process.env.SESSION_SECRET = 'vercel-fallback-session-secret-change-in-production-32chars';
+      }
+
+      const { config } = await import('../server/src/config.js');
+      const { connectDb } = await import('../server/src/db.js');
+      const { createApp } = await import('../server/src/app.js');
+      const { Category } = await import('../server/src/models/Category.js');
+      const { seedPricing, seedReference, seedSamples } = await import('../server/scripts/seedLib.js');
+
       await connectDb(config.mongoUri);
-      // Auto-seed reference data and sample listings if starting with an empty database
       if ((await Category.countDocuments()) === 0) {
         await seedReference();
         await seedPricing();
@@ -32,8 +38,8 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Vercel API handler error:', err);
     res.status(500).json({
-      error: 'Database or server configuration error. Check MONGODB_URI and SESSION_SECRET in Vercel Environment Variables.',
-      details: err.message
+      error: err.message || 'Server initialization failed.',
+      hint: 'Ensure MONGODB_URI is set in Vercel Settings -> Environment Variables and Network Access allows 0.0.0.0/0 on MongoDB Atlas.'
     });
   }
 }
