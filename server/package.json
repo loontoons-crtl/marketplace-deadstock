@@ -7,6 +7,7 @@
     "node": ">=20.12"
   },
   "scripts": {
+    "db": "node scripts/localDb.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "seed": "node scripts/seed.js",

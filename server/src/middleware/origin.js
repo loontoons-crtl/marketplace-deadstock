@@ -9,6 +9,7 @@ export function checkOrigin(req, res, next) {
   if (SAFE.has(req.method)) return next();
   const origin = req.get('origin');
   if (!origin) return next(); // non-browser clients (curl, server jobs) cannot carry a victim's cookie
-  if (config.clientOrigins.includes(origin)) return next();
+  if (config.clientOrigins.includes(origin) || config.clientOrigins.includes('*')) return next();
+  if (!config.isProd && (origin.endsWith('.lhr.life') || origin.endsWith('.trycloudflare.com') || origin.endsWith('.loca.lt'))) return next();
   return res.status(403).json({ error: 'Request origin not allowed' });
 }
