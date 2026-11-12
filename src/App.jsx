@@ -5,6 +5,9 @@ import Search from './pages/Search.jsx';
 import Product from './pages/Product.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import Terms from './pages/Terms.jsx';
+import RefundPolicy from './pages/RefundPolicy.jsx';
+import { AppErrorBoundary, NotFoundPage } from './pages/ErrorPage.jsx';
 import SellerLayout from './pages/seller/Layout.jsx';
 import SellerListings from './pages/seller/Listings.jsx';
 import ListingForm from './pages/seller/ListingForm.jsx';
@@ -81,8 +84,11 @@ function Footer() {
         </div>
         <div>
           <p className="eyebrow text-ink">Company</p>
-          <p className="mt-4">Placeholder: hello@example.com</p>
-          <p className="mt-2">Terms, privacy and refund pages are published before launch.</p>
+          <ul className="mt-4 space-y-2">
+            <li><Link to="/terms" className="hover:text-ink">Terms &amp; conditions</Link></li>
+            <li><Link to="/refund-policy" className="hover:text-ink">Refund policy</Link></li>
+            <li className="pt-1 text-xs">Contact: hello@example.com</li>
+          </ul>
         </div>
       </div>
     </footer>
@@ -112,35 +118,39 @@ export default function App() {
       <div className="bg-night px-4 py-1.5 text-center text-[11px] tracking-wide text-white/70">Preview build. Listings marked “sample” are demonstration data.</div>
       <Header />
       {meta.error && <div className="mx-auto max-w-6xl px-4 pt-4"><ErrorBox message={meta.error} onRetry={meta.reload} /></div>}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/product/:id" element={<Product />} />
-        <Route path="/sell" element={<Sell />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<RequireAuth><SellerLayout /></RequireAuth>}>
-          <Route index element={<SellerListings />} />
-          <Route path="listings/new" element={<ListingForm />} />
-          <Route path="listings/:id/edit" element={<ListingForm key="edit" />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="subscription" element={<Subscription />} />
-        </Route>
-        <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
-          <Route index element={<AdminOverview />} />
-          <Route path="listings" element={<AdminListings />} />
-          <Route path="listings/:id" element={<AdminListingDetail />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="sellers" element={<AdminSellers />} />
-          <Route path="sellers/:id" element={<AdminSellerDetail />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="localities" element={<AdminLocalities />} />
-          <Route path="audit" element={<AdminAudit />} />
-          <Route path="plans" element={<AdminPlans />} />
-          <Route path="payments" element={<AdminPayments />} />
-        </Route>
-        <Route path="*" element={<main className="mx-auto max-w-2xl px-4 py-16"><h1 className="text-2xl font-bold">Page not found</h1><Link to="/" className="btn btn-outline mt-4">Go home</Link></main>} />
-      </Routes>
+      <AppErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/product/:id" element={<Product />} />
+          <Route path="/sell" element={<Sell />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/dashboard" element={<RequireAuth><SellerLayout /></RequireAuth>}>
+            <Route index element={<SellerListings />} />
+            <Route path="listings/new" element={<ListingForm />} />
+            <Route path="listings/:id/edit" element={<ListingForm key="edit" />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="subscription" element={<Subscription />} />
+          </Route>
+          <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
+            <Route index element={<AdminOverview />} />
+            <Route path="listings" element={<AdminListings />} />
+            <Route path="listings/:id" element={<AdminListingDetail />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="sellers" element={<AdminSellers />} />
+            <Route path="sellers/:id" element={<AdminSellerDetail />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="localities" element={<AdminLocalities />} />
+            <Route path="audit" element={<AdminAudit />} />
+            <Route path="plans" element={<AdminPlans />} />
+            <Route path="payments" element={<AdminPayments />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AppErrorBoundary>
       <Footer />
     </>
   );

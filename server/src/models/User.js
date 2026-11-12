@@ -4,8 +4,9 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
-    phone: { type: String, required: true }, // +91XXXXXXXXXX
-    passwordHash: { type: String, required: true, select: false },
+    phone: { type: String, required: false }, // +91XXXXXXXXXX
+    passwordHash: { type: String, required: false, select: false },
+    googleId: { type: String, default: undefined },
     role: { type: String, enum: ['seller', 'admin'], default: 'seller' },
     status: { type: String, enum: ['active', 'suspended'], default: 'active' },
     suspendedReason: { type: String, default: '' },
@@ -18,7 +19,8 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ phone: 1 }, { unique: true });
+userSchema.index({ phone: 1 }, { unique: true, sparse: true });
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 
 userSchema.virtual('phoneVerified').get(function () { return Boolean(this.phoneVerifiedAt); });
 

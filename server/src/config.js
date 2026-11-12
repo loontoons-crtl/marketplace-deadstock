@@ -32,6 +32,9 @@ export const config = {
   razorpayWebhookSecret: env.RAZORPAY_WEBHOOK_SECRET || '',
   // 'console' prints emails (renewal reminders etc.) to the server log. Development only.
   emailProvider: env.EMAIL_PROVIDER || 'console',
+  // Google OAuth 2.0 (optional; enables "Continue with Google").
+  googleClientId: env.GOOGLE_CLIENT_ID || '',
+  googleClientSecret: env.GOOGLE_CLIENT_SECRET || '',
   // Background jobs (renewal reminders). Off in tests, which call the job directly.
   runJobs: !isTest && env.RUN_JOBS !== 'false',
 };

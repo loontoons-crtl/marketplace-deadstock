@@ -98,6 +98,7 @@ r.get('/me', async (req, res) => {
 
 r.post('/phone/send-otp', requireAuth, otpLimiter, async (req, res) => {
   if (req.user.phoneVerifiedAt) return res.json({ ok: true, alreadyVerified: true });
+  if (!req.user.phone) throw new HttpError(400, 'Add a mobile number to your profile first.');
   const existing = await PhoneOtp.findOne({ user: req.user._id });
   if (existing && Date.now() - existing.createdAt.getTime() < OTP_RESEND_MS) {
     throw new HttpError(429, 'Please wait a minute before requesting another code.');
@@ -127,6 +128,98 @@ r.post('/phone/verify', requireAuth, async (req, res) => {
   await PhoneOtp.deleteMany({ user: req.user._id });
   const profile = await SellerProfile.findOne({ user: req.user._id });
   res.json({ user: userSelf(req.user, profile) });
+});
+
+// ---------- Google OAuth 2.0 ----------
+const safeNext = (n) => (n && n.startsWith('/') && !n.startsWith('//') ? n : '/dashboard');
+const googleRedirectUri = (req) => `${req.get('x-forwarded-proto') || req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
+r.get('/google', (req, res) => {
+  if (!config.googleClientId || !config.googleClientSecret) {
+    return res.redirect('/login?oauth_error=' + encodeURIComponent('Google Sign-In is not configured yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment variables.'));
+  }
+  const state = crypto.randomBytes(24).toString('hex');
+  req.session.oauthState = state;
+  req.session.oauthNext = safeNext(req.query.next);
+  req.session.save(() => {
+    const params = new URLSearchParams({
+      client_id: config.googleClientId,
+      redirect_uri: googleRedirectUri(req),
+      response_type: 'code',
+      scope: 'openid email profile',
+      state,
+      prompt: 'select_account',
+    });
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+  });
+});
+
+r.get('/google/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error) return res.redirect('/login?oauth_error=' + encodeURIComponent('Google Sign-In was cancelled.'));
+  if (!code || !state || state !== req.session.oauthState) {
+    return res.redirect('/login?oauth_error=' + encodeURIComponent('Invalid or expired Google Sign-In session. Please try again.'));
+  }
+  const nextUrl = safeNext(req.session.oauthNext);
+  delete req.session.oauthState;
+  delete req.session.oauthNext;
+
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code: String(code),
+        client_id: config.googleClientId,
+        client_secret: config.googleClientSecret,
+        redirect_uri: googleRedirectUri(req),
+        grant_type: 'authorization_code',
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.access_token) throw new Error('Token exchange failed');
+
+    const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const info = await infoRes.json();
+    if (!info.email || !info.sub) throw new Error('Missing Google profile email');
+
+    const email = info.email.toLowerCase();
+    let user = await User.findOne({ $or: [{ googleId: info.sub }, { email }] });
+    let isNew = false;
+
+    if (!user) {
+      isNew = true;
+      user = await User.create({
+        name: (info.name || email.split('@')[0]).slice(0, 80),
+        email,
+        googleId: info.sub,
+        role: 'seller',
+        status: 'active',
+        lastLoginAt: new Date(),
+      });
+      await SellerProfile.create({
+        user: user._id,
+        displayName: user.name,
+        sellerType: 'Dealer',
+        city: 'Bengaluru',
+      });
+    } else {
+      if (user.status !== 'active') {
+        return res.redirect('/login?oauth_error=' + encodeURIComponent('This account is suspended. Contact support.'));
+      }
+      if (!user.googleId) user.googleId = info.sub;
+      user.lastLoginAt = new Date();
+      await user.save();
+    }
+
+    await startSession(req, user);
+    res.redirect(isNew ? '/dashboard/profile?welcome=1' : nextUrl);
+  } catch (err) {
+    console.error('[google-oauth]', err.message);
+    res.redirect('/login?oauth_error=' + encodeURIComponent('Could not complete Google Sign-In. Please try again.'));
+  }
 });
 
 export default r;

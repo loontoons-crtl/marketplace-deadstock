@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import Field from '../components/Field.jsx';
+import { GoogleButton, GoogleDivider } from '../components/GoogleButton.jsx';
 import { useAuth } from '../lib/auth.jsx';
 
 // Only allow redirects to paths on this site.
@@ -11,7 +12,7 @@ export default function Login() {
   const [sp] = useSearchParams();
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(() => sp.get('oauth_error') || null);
   const [fields, setFields] = useState({});
   if (user) return <Navigate to={safeNext(sp.get('next'))} replace />;
 
@@ -27,13 +28,17 @@ export default function Login() {
     <main className="mx-auto max-w-md px-4 py-14">
       <h1 className="text-3xl font-bold">Seller login</h1>
       <p className="mt-2 text-sm text-muted">Buyers don't need an account. This is for sellers managing listings.</p>
-      <form onSubmit={submit} className="mt-6 space-y-4 rounded-lg border border-line bg-white p-5" noValidate>
-        {error && <p className="rounded bg-red-50 p-2 text-sm text-red-800" role="alert">{error}</p>}
-        <Field label="Email or mobile number" name="identifier" error={fields.identifier}>{(p) => <input {...p} autoComplete="username" required />}</Field>
-        <Field label="Password" name="password" error={fields.password}>{(p) => <input {...p} type="password" autoComplete="current-password" required />}</Field>
-        <button className="btn btn-primary w-full" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
-        <p className="text-xs text-muted">Forgot your password? Password reset arrives before launch. For now, contact support.</p>
-      </form>
+      <div className="mt-6 rounded-lg border border-line bg-white p-5">
+        <form onSubmit={submit} className="space-y-4" noValidate>
+          {error && <p className="rounded bg-red-50 p-2 text-sm text-red-800" role="alert">{error}</p>}
+          <Field label="Email or mobile number" name="identifier" error={fields.identifier}>{(p) => <input {...p} autoComplete="username" required />}</Field>
+          <Field label="Password" name="password" error={fields.password}>{(p) => <input {...p} type="password" autoComplete="current-password" required />}</Field>
+          <button className="btn btn-primary w-full" disabled={busy}>{busy ? 'Logging in…' : 'Sign in'}</button>
+          <p className="text-xs text-muted">Forgot your password? Password reset arrives before launch. For now, contact support.</p>
+        </form>
+        <GoogleDivider />
+        <GoogleButton next={safeNext(sp.get('next'))} label="Google" />
+      </div>
       <p className="mt-4 text-sm">New seller? <Link to="/register" className="font-semibold text-forest underline">Create an account</Link></p>
     </main>
   );
