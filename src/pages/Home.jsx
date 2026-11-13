@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import HeroSlider from '../components/HeroSlider.jsx';
 import ListingCard from '../components/ListingCard.jsx';
 import Rail from '../components/Rail.jsx';
@@ -43,6 +43,7 @@ function CategoryTile({ c, big = false, className = '' }) {
 
 export default function Home() {
   const nav = useNavigate();
+  const [sp] = useSearchParams();
   const { categories, localities, pricing } = useMeta();
   const [recent, setRecent] = useState(null);
   const [error, setError] = useState(null);
@@ -63,6 +64,11 @@ export default function Home() {
 
   return (
     <main>
+      {sp.get('account_deleted') && (
+        <div className="bg-forest/10 border-b border-forest/20 text-forest text-center py-2.5 px-4 text-sm font-medium">
+          Your account and all associated listings have been permanently deleted.
+        </div>
+      )}
       <HeroSlider />
 
       {/* Search, overlapping the bottom of the hero */}

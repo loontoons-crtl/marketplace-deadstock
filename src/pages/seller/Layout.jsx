@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth.jsx';
 import { useFetch } from '../../lib/useFetch.js';
 import { bytes, dateIN } from '../../lib/format.js';
@@ -22,12 +22,20 @@ function PlanBanner({ b }) {
 }
 
 export default function SellerLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
   const { data } = useFetch('/billing');
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><p className="text-sm text-muted">Seller dashboard</p><h1 className="text-2xl font-bold">{user.profile?.displayName || user.name}</h1></div>
+        <button
+          type="button"
+          onClick={async () => { await logout(); nav('/'); }}
+          className="btn btn-outline text-xs px-3.5 py-1.5"
+        >
+          Log out
+        </button>
       </div>
       <PlanBanner b={data} />
       <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-line pb-2" aria-label="Seller dashboard">

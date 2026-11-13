@@ -13,7 +13,8 @@ export function AuthProvider({ children }) {
   const login = async (identifier, password) => { const d = await api('/auth/login', { method: 'POST', body: { identifier, password } }); setUser(d.user); return d.user; };
   const register = async (form) => { const d = await api('/auth/register', { method: 'POST', body: form }); setUser(d.user); return d.user; };
   const logout = async () => { await api('/auth/logout', { method: 'POST' }).catch(() => {}); setUser(null); };
-  return <AuthCtx.Provider value={{ user, setUser, refresh, login, register, logout }}>{children}</AuthCtx.Provider>;
+  const deleteAccount = async () => { await api('/seller/profile', { method: 'DELETE' }); setUser(null); };
+  return <AuthCtx.Provider value={{ user, setUser, refresh, login, register, logout, deleteAccount }}>{children}</AuthCtx.Provider>;
 }
 
 export const useAuth = () => useContext(AuthCtx);

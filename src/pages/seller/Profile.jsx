@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Field from '../../components/Field.jsx';
 import { api } from '../../lib/api.js';
 import { useAuth } from '../../lib/auth.jsx';
@@ -40,8 +40,71 @@ function PhoneVerify() {
   );
 }
 
+function DeleteAccountSection() {
+  const { deleteAccount } = useAuth();
+  const nav = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDelete = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteAccount();
+      nav('/?account_deleted=1', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Could not delete account. Please try again.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="rounded-lg border border-red-200 bg-red-50/50 p-5 text-sm">
+      <h2 className="text-lg font-bold text-red-950">Danger zone</h2>
+      <p className="mt-1 text-xs text-red-800 leading-relaxed">
+        Permanently delete your account, seller profile, active listings, and all uploaded photo files. This cannot be undone.
+      </p>
+      {error && <p className="mt-2 rounded bg-red-100 p-2 text-xs text-red-900" role="alert">{error}</p>}
+      {!confirming ? (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="mt-4 rounded-md border border-red-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-50"
+        >
+          Delete account
+        </button>
+      ) : (
+        <div className="mt-4 rounded-md border border-red-300 bg-white p-3.5 text-xs space-y-2">
+          <p className="font-semibold text-red-900">Are you sure you want to permanently delete your account?</p>
+          <p className="text-muted">All your listings will be removed from the marketplace immediately.</p>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleDelete}
+              className="rounded-md bg-red-600 px-3 py-1.5 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+            >
+              {busy ? 'Deleting…' : 'Yes, delete my account'}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setConfirming(false)}
+              className="btn btn-outline text-xs px-3 py-1.5"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
+  const nav = useNavigate();
   const { sellerTypes, localities } = useMeta();
   const [sp] = useSearchParams();
   const p = user.profile || {};
@@ -76,8 +139,21 @@ export default function Profile() {
         </section>
         <section className="rounded-lg border border-line bg-white p-5 text-sm">
           <h2 className="text-lg font-bold">Account</h2>
-          <p className="mt-2">{user.name}</p><p className="text-muted">{user.email}</p>
+          <p className="mt-2 font-medium">{user.name}</p>
+          <p className="text-muted">{user.email}</p>
+          {user.phone && <p className="text-muted">{user.phone}</p>}
+          <div className="mt-4 pt-3 border-t border-line flex items-center justify-between">
+            <span className="text-xs text-muted">Signed in</span>
+            <button
+              type="button"
+              onClick={async () => { await logout(); nav('/'); }}
+              className="btn btn-outline text-xs px-3 py-1.5"
+            >
+              Log out
+            </button>
+          </div>
         </section>
+        <DeleteAccountSection />
       </div>
 
       <form onSubmit={save} className="space-y-4 rounded-lg border border-line bg-white p-5" noValidate>

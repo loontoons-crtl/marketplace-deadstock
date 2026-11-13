@@ -57,7 +57,7 @@ function Header() {
             <>
               {user.role === 'admin' && <Link to="/admin" className="px-3 py-2 font-semibold text-forest">Admin</Link>}
               <Link to="/dashboard" className="btn btn-outline">Dashboard</Link>
-              <button className="hidden px-3 py-2 text-muted hover:text-ink sm:block" onClick={async () => { await logout(); nav('/'); }}>Log out</button>
+              <button className="px-3 py-2 text-muted hover:text-ink" onClick={async () => { await logout(); nav('/'); }}>Log out</button>
             </>
           ) : (
             <>
@@ -71,6 +71,8 @@ function Header() {
   );
 }
 function Footer() {
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
   return (
     <footer className="mt-12 border-t border-line bg-paper">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 text-sm text-muted sm:grid-cols-[1.4fr_1fr_1fr]">
@@ -80,7 +82,18 @@ function Footer() {
         </div>
         <div>
           <p className="eyebrow text-ink">Explore</p>
-          <ul className="mt-4 space-y-2"><li><Link to="/search" className="hover:text-ink">All materials</Link></li><li><Link to="/sell" className="hover:text-ink">Sell your stock</Link></li><li><Link to="/login" className="hover:text-ink">Seller log in</Link></li></ul>
+          <ul className="mt-4 space-y-2">
+            <li><Link to="/search" className="hover:text-ink">All materials</Link></li>
+            <li><Link to="/sell" className="hover:text-ink">Sell your stock</Link></li>
+            {user ? (
+              <>
+                <li><Link to="/dashboard" className="hover:text-ink">Seller dashboard</Link></li>
+                <li><button type="button" className="hover:text-ink" onClick={async () => { await logout(); nav('/'); }}>Log out</button></li>
+              </>
+            ) : (
+              <li><Link to="/login" className="hover:text-ink">Seller log in</Link></li>
+            )}
+          </ul>
         </div>
         <div>
           <p className="eyebrow text-ink">Company</p>
