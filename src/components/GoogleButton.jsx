@@ -37,3 +37,4 @@ export function GoogleButton({ next = '/dashboard', label = 'Continue with Googl
     </a>
   );
 }
+

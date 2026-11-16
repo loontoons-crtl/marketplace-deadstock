@@ -7,6 +7,8 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Terms from './pages/Terms.jsx';
 import RefundPolicy from './pages/RefundPolicy.jsx';
+import Privacy from './pages/Privacy.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
 import { AppErrorBoundary, NotFoundPage } from './pages/ErrorPage.jsx';
 import SellerLayout from './pages/seller/Layout.jsx';
 import SellerListings from './pages/seller/Listings.jsx';
@@ -99,7 +101,17 @@ function Footer() {
           <p className="eyebrow text-ink">Company</p>
           <ul className="mt-4 space-y-2">
             <li><Link to="/terms" className="hover:text-ink">Terms &amp; conditions</Link></li>
+            <li><Link to="/privacy" className="hover:text-ink">Privacy &amp; cookies</Link></li>
             <li><Link to="/refund-policy" className="hover:text-ink">Refund policy</Link></li>
+            <li>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-banner'))}
+                className="hover:text-ink text-left"
+              >
+                Cookie preferences
+              </button>
+            </li>
             <li className="pt-1 text-xs">Contact: hello@example.com</li>
           </ul>
         </div>
@@ -140,6 +152,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/dashboard" element={<RequireAuth><SellerLayout /></RequireAuth>}>
             <Route index element={<SellerListings />} />
@@ -165,6 +178,7 @@ export default function App() {
         </Routes>
       </AppErrorBoundary>
       <Footer />
+      <CookieBanner />
     </>
   );
 }

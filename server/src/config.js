@@ -3,7 +3,7 @@
 try { process.loadEnvFile(); } catch { /* no .env file: rely on real environment variables */ }
 
 const env = process.env;
-const isProd = env.NODE_ENV === 'production';
+const isProd = env.NODE_ENV === 'production' || Boolean(env.VERCEL);
 const isTest = env.NODE_ENV === 'test';
 
 function required(name) {
