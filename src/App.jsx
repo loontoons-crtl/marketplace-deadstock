@@ -13,6 +13,7 @@ import { AppErrorBoundary, NotFoundPage } from './pages/ErrorPage.jsx';
 import SellerLayout from './pages/seller/Layout.jsx';
 import SellerListings from './pages/seller/Listings.jsx';
 import ListingForm from './pages/seller/ListingForm.jsx';
+import MassUpload from './pages/seller/MassUpload.jsx';
 import Profile from './pages/seller/Profile.jsx';
 import Subscription from './pages/seller/Subscription.jsx';
 import AdminPlans from './pages/admin/Plans.jsx';
@@ -157,6 +158,7 @@ export default function App() {
           <Route path="/dashboard" element={<RequireAuth><SellerLayout /></RequireAuth>}>
             <Route index element={<SellerListings />} />
             <Route path="listings/new" element={<ListingForm />} />
+            <Route path="listings/mass-upload" element={<MassUpload />} />
             <Route path="listings/:id/edit" element={<ListingForm key="edit" />} />
             <Route path="profile" element={<Profile />} />
             <Route path="subscription" element={<Subscription />} />

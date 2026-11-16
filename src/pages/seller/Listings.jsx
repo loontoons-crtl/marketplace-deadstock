@@ -92,7 +92,13 @@ export default function SellerListings() {
   return (
     <>
       <Checklist user={user} listings={items} />
-      <div className="flex items-center justify-between"><h2 className="text-lg font-bold">My listings ({items.length})</h2><Link to="/dashboard/listings/new" className="btn btn-primary">Add listing</Link></div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-bold">My listings ({items.length})</h2>
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/listings/mass-upload" className="btn btn-outline text-sm">Mass upload (CSV)</Link>
+          <Link to="/dashboard/listings/new" className="btn btn-primary text-sm">Add listing</Link>
+        </div>
+      </div>
       {items.length === 0
         ? <div className="mt-4 rounded-lg border border-dashed border-line p-10 text-center"><p className="font-semibold">No listings yet</p><p className="mt-1 text-sm text-muted">Start with a draft. Listings are free to add within your storage.</p></div>
         : <ul className="mt-4 space-y-3">{items.map((l) => <Row key={l._id} l={l} onChange={replace} onRemove={remove} />)}</ul>}

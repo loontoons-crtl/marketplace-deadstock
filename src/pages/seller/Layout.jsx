@@ -41,6 +41,7 @@ export default function SellerLayout() {
       <nav className="mt-5 flex gap-1 overflow-x-auto border-b border-line pb-2" aria-label="Seller dashboard">
         <NavLink to="/dashboard" end className={tab}>My listings</NavLink>
         <NavLink to="/dashboard/listings/new" className={tab}>Add listing</NavLink>
+        <NavLink to="/dashboard/listings/mass-upload" className={tab}>Mass upload</NavLink>
         <NavLink to="/dashboard/subscription" className={tab}>Subscription and storage</NavLink>
         <NavLink to="/dashboard/profile" className={tab}>Profile and verification</NavLink>
       </nav>

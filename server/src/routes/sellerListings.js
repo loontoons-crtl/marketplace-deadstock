@@ -8,7 +8,7 @@ import { Listing } from '../models/Listing.js';
 import { Locality } from '../models/Locality.js';
 import { SellerProfile } from '../models/SellerProfile.js';
 import { nextSeq } from '../models/Counter.js';
-import { DELETABLE_STATUSES, LISTING_STATUSES, LIVE_STATUSES, SELLER_AVAILABILITY_TRANSITIONS } from '../lib/constants.js';
+import { CONDITIONS, DELETABLE_STATUSES, LISTING_STATUSES, LIVE_STATUSES, SELLER_AVAILABILITY_TRANSITIONS, UNITS } from '../lib/constants.js';
 import { getEntitlement } from '../lib/entitlement.js';
 import { formatBytes } from '../lib/format.js';
 import { releaseStorage, reserveStorage } from '../lib/quota.js';
@@ -97,6 +97,141 @@ r.post('/', async (req, res) => {
   const listingNo = `DS-${await nextSeq('listing')}`;
   const l = await Listing.create({ ...out, listingNo, seller: req.user._id, status: 'draft' });
   res.status(201).json({ listing: listingOwner(l, category) });
+});
+
+// Download sample CSV template for bulk upload
+r.get('/bulk-template', (req, res) => {
+  const csv = [
+    'Title,Category,Subcategory,Condition,Quantity,Unit,TotalPrice,MRP,MinOrderQty,Brand,Model,Locality,PickupDetails,Description',
+    '"1.0 mm Decorative Laminate Sheets",laminates,"Decorative laminates","Unused surplus",100,sheets,140000,220000,10,"CenturyPly","WG-101","Peenya","Godown pickup only","Leftover from commercial office project. Sealed bundles stored indoors."',
+    '"Vitrified Floor Tiles 600x600",tiles,"Vitrified tiles","Discontinued stock",50,boxes,75000,120000,5,"Kajaria","VT-60","Whitefield","Pickup or delivery available","Single production batch, consistent shade across all boxes."',
+    '"Black Granite Slabs 18 mm",stone,"Granite","Unused surplus",1,lot,180000,,,"GraniteCo","BG-18","Yeshwanthpur","Yard pickup with loading support","14 polished slabs, approx 180 sq ft total."'
+  ].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="deadstock-mass-upload-template.csv"');
+  res.send(csv);
+});
+
+// Mass upload multiple listings at once
+r.post('/bulk', async (req, res) => {
+  const { items } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new HttpError(400, 'Provide a list of items to upload.');
+  }
+  if (items.length > 200) {
+    throw new HttpError(400, 'Maximum 200 items per bulk upload.');
+  }
+
+  const [allCategories, allLocalities] = await Promise.all([
+    Category.find({ active: true }),
+    Locality.find({ city: 'Bengaluru', active: true })
+  ]);
+
+  const catBySlug = new Map(allCategories.map((c) => [c.slug.toLowerCase(), c]));
+  const catByName = new Map(allCategories.map((c) => [c.name.toLowerCase(), c]));
+  const locByName = new Map(allLocalities.map((l) => [l.name.toLowerCase(), l]));
+
+  const results = [];
+  let createdCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    const raw = items[i];
+    try {
+      const catInput = String(raw.categorySlug || raw.category || '').trim().toLowerCase();
+      const category = catBySlug.get(catInput) || catByName.get(catInput);
+      if (!category) {
+        throw new Error(`Category "${raw.category || raw.categorySlug || 'empty'}" not found.`);
+      }
+
+      const locInput = String(raw.locality || '').trim().toLowerCase();
+      let loc = locByName.get(locInput);
+      if (!loc && locInput) {
+        loc = allLocalities.find((l) => l.name.toLowerCase().includes(locInput));
+      }
+      if (!loc) {
+        throw new Error(`Locality "${raw.locality || 'empty'}" not found in Bengaluru.`);
+      }
+
+      const cond = String(raw.condition || '').trim();
+      if (!CONDITIONS.includes(cond)) {
+        throw new Error(`Condition "${cond}" is invalid. Must be one of: ${CONDITIONS.join(', ')}`);
+      }
+
+      const unit = String(raw.unit || '').trim();
+      if (!UNITS.includes(unit)) {
+        throw new Error(`Unit "${unit}" is invalid. Must be one of: ${UNITS.join(', ')}`);
+      }
+
+      const qty = unit === 'lot' ? 1 : Number(raw.quantity);
+      if (!qty || qty <= 0 || isNaN(qty)) {
+        throw new Error('Quantity must be a positive number.');
+      }
+
+      const totalPrice = Math.round(Number(raw.totalPrice));
+      if (!totalPrice || totalPrice <= 0 || isNaN(totalPrice)) {
+        throw new Error('Total price must be greater than 0.');
+      }
+
+      const mrp = raw.mrp ? Math.round(Number(raw.mrp)) : null;
+      if (mrp != null && mrp <= totalPrice) {
+        throw new Error(`MRP (₹${mrp.toLocaleString('en-IN')}) must be higher than asking price (₹${totalPrice.toLocaleString('en-IN')}).`);
+      }
+
+      const minOrderQty = raw.minOrderQty ? Math.round(Number(raw.minOrderQty)) : null;
+      const title = String(raw.title || '').trim();
+      if (title.length < 5) {
+        throw new Error('Title must have at least 5 characters.');
+      }
+
+      const listingNo = `DS-${await nextSeq('listing')}`;
+      const doc = await Listing.create({
+        listingNo,
+        seller: req.user._id,
+        category: category._id,
+        subcategory: String(raw.subcategory || '').trim(),
+        title,
+        brand: String(raw.brand || '').trim(),
+        model: String(raw.model || '').trim(),
+        condition: cond,
+        quantity: qty,
+        unit,
+        totalPrice,
+        mrp,
+        minOrderQty,
+        city: 'Bengaluru',
+        locality: loc.name,
+        location: loc.location?.coordinates?.length === 2 ? { type: 'Point', coordinates: loc.location.coordinates } : undefined,
+        description: String(raw.description || '').trim(),
+        pickupDetails: String(raw.pickupDetails || '').trim(),
+        status: 'draft',
+      });
+
+      createdCount++;
+      results.push({
+        row: i + 1,
+        success: true,
+        id: doc._id,
+        listingNo,
+        title: doc.title,
+      });
+    } catch (err) {
+      failedCount++;
+      results.push({
+        row: i + 1,
+        success: false,
+        title: raw.title || `Row ${i + 1}`,
+        error: err.message,
+      });
+    }
+  }
+
+  res.status(createdCount > 0 ? 201 : 400).json({
+    total: items.length,
+    createdCount,
+    failedCount,
+    results,
+  });
 });
 
 r.get('/:id', async (req, res) => {
