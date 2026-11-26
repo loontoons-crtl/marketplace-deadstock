@@ -58,11 +58,11 @@ router.post('/create-order', async (req, res) => {
     });
   } catch (err) {
     console.error('Razorpay create-order error:', err);
-    if (err?.statusCode === 401 || err?.error?.code === 'BAD_REQUEST_ERROR' && err?.error?.description?.includes('Auth')) {
-      return res.status(401).json({ error: 'Razorpay authentication failed.' });
-    }
-    return res.status(500).json({
+    return res.status(err?.statusCode || 500).json({
       error: err?.error?.description || err.message || 'Failed to create Razorpay order.',
+      code: err?.error?.code,
+      keyIdUsed: config.razorpayKeyId,
+      secretLen: config.razorpayKeySecret.length,
     });
   }
 });
