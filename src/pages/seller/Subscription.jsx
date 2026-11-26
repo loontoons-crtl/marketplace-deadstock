@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ErrorBox, Loading } from '../../components/States.jsx';
+import RazorpayCheckout from '../../components/RazorpayCheckout.jsx';
 import { api } from '../../lib/api.js';
 import { payWithRazorpay } from '../../lib/checkout.js';
 import { approxPhotos, bytes, dateIN, num, rupees } from '../../lib/format.js';
@@ -82,6 +83,29 @@ export default function Subscription() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-lg border border-forest/30 bg-forest/5 p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-forest">Razorpay Web Checkout</h2>
+              <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Test Mode</span>
+            </div>
+            <p className="mt-0.5 text-xs text-muted">Standard Web Checkout integration is live. Test with ₹1.00 dummy transaction.</p>
+          </div>
+          <RazorpayCheckout
+            amount={1}
+            name="Deadstock Bengaluru"
+            description="Test Transaction (₹1.00)"
+            buttonText="Test Pay ₹1.00"
+            className="btn btn-primary px-4 py-2 text-sm shadow-sm whitespace-nowrap"
+            onSuccess={(data) => {
+              alert(`Payment successful! Payment ID: ${data.paymentId}`);
+              reload();
+            }}
+          />
+        </div>
+      </section>
+
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-line bg-white p-5">
           <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-bold">Your plan</h2><span className={`rounded px-2 py-0.5 text-xs font-semibold ${tone}`}>{label}</span></div>

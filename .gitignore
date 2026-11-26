@@ -2,3 +2,8 @@ node_modules
 dist
 .env
 .DS_Store
+*.zip
+shopify-catalog-repo/
+shopify-theme-repo/
+database-export-sanitized.json
+shopify-products-export.csv

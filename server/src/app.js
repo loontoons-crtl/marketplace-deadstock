@@ -13,6 +13,7 @@ import sellerListingRoutes from './routes/sellerListings.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import billingRoutes, { razorpayWebhook } from './routes/billing.js';
+import paymentRoutes from './routes/payment.js';
 import { LOCAL_DIR } from './lib/storage.js';
 
 export function createApp() {
@@ -49,6 +50,7 @@ export function createApp() {
   app.use('/api/seller/profile', profileRoutes);
   app.use('/api/seller/listings', sellerListingRoutes);
   app.use('/api/billing', billingRoutes);
+  app.use('/api', paymentRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api', publicRoutes);
 
