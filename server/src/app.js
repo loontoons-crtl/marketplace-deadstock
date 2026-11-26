@@ -46,8 +46,9 @@ export function createApp() {
   app.get('/api/health', (req, res) => res.json({
     ok: true,
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    razorpayKeyIdPrefix: config.razorpayKeyId ? config.razorpayKeyId.slice(0, 12) + '...' : 'NOT_SET',
-    hasKeySecret: Boolean(config.razorpayKeySecret),
+    keyId: config.razorpayKeyId,
+    keySecretLen: config.razorpayKeySecret.length,
+    keySecretPrefix: config.razorpayKeySecret.slice(0, 4) + '...',
   }));
 
   app.use('/api', checkOrigin, loadUser);
