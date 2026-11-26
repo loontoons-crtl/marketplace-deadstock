@@ -6,8 +6,8 @@ import { config } from '../config.js';
 const router = Router();
 
 function getRazorpayInstance() {
-  const key_id = (config.razorpayKeyId || process.env.RAZORPAY_KEY_ID || '').trim();
-  const key_secret = (config.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET || '').trim();
+  const key_id = config.razorpayKeyId;
+  const key_secret = config.razorpayKeySecret;
   if (!key_id || !key_secret) {
     return null;
   }

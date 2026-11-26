@@ -12,6 +12,14 @@ function required(name) {
   return v;
 }
 
+function sanitizeSecret(val) {
+  if (!val) return '';
+  const firstLine = String(val).trim().split(/[\r\n]+/)[0].trim();
+  const clean = firstLine.replace(/['"\s]+/g, '');
+  const match = clean.match(/^[a-zA-Z0-9]{24}/);
+  return match ? match[0] : clean;
+}
+
 export const config = {
   isProd,
   isTest,
@@ -27,8 +35,8 @@ export const config = {
   storageDriver: env.STORAGE_DRIVER || (env.CLOUDINARY_URL ? 'cloudinary' : 'local'),
   cloudinaryUrl: env.CLOUDINARY_URL || '',
   // Razorpay. Without the key id + secret, online payment is switched off (admins can still record offline payments).
-  razorpayKeyId: (env.RAZORPAY_KEY_ID || '').trim(),
-  razorpayKeySecret: (env.RAZORPAY_KEY_SECRET || '').trim(),
+  razorpayKeyId: (env.RAZORPAY_KEY_ID || '').trim().replace(/['"\s]+/g, ''),
+  razorpayKeySecret: sanitizeSecret(env.RAZORPAY_KEY_SECRET),
   razorpayWebhookSecret: (env.RAZORPAY_WEBHOOK_SECRET || '').trim(),
   // 'console' prints emails (renewal reminders etc.) to the server log. Development only.
   emailProvider: env.EMAIL_PROVIDER || 'console',
