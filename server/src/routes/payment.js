@@ -6,13 +6,12 @@ import { config } from '../config.js';
 const router = Router();
 
 function getRazorpayInstance() {
-  if (!config.razorpayKeyId || !config.razorpayKeySecret) {
+  const key_id = (config.razorpayKeyId || process.env.RAZORPAY_KEY_ID || '').trim();
+  const key_secret = (config.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET || '').trim();
+  if (!key_id || !key_secret) {
     return null;
   }
-  return new Razorpay({
-    key_id: config.razorpayKeyId,
-    key_secret: config.razorpayKeySecret,
-  });
+  return new Razorpay({ key_id, key_secret });
 }
 
 const safeEqualHex = (a, b) => {

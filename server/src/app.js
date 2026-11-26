@@ -43,7 +43,12 @@ export function createApp() {
     app.use('/uploads', helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }), express.static(LOCAL_DIR, { maxAge: '30d', immutable: true, index: false, dotfiles: 'deny' }));
   }
 
-  app.get('/api/health', (req, res) => res.json({ ok: true, db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' }));
+  app.get('/api/health', (req, res) => res.json({
+    ok: true,
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    razorpayKeyIdPrefix: config.razorpayKeyId ? config.razorpayKeyId.slice(0, 12) + '...' : 'NOT_SET',
+    hasKeySecret: Boolean(config.razorpayKeySecret),
+  }));
 
   app.use('/api', checkOrigin, loadUser);
   app.use('/api/auth', authRoutes);

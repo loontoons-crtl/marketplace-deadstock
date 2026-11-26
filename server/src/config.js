@@ -27,9 +27,9 @@ export const config = {
   storageDriver: env.STORAGE_DRIVER || (env.CLOUDINARY_URL ? 'cloudinary' : 'local'),
   cloudinaryUrl: env.CLOUDINARY_URL || '',
   // Razorpay. Without the key id + secret, online payment is switched off (admins can still record offline payments).
-  razorpayKeyId: env.RAZORPAY_KEY_ID || '',
-  razorpayKeySecret: env.RAZORPAY_KEY_SECRET || '',
-  razorpayWebhookSecret: env.RAZORPAY_WEBHOOK_SECRET || '',
+  razorpayKeyId: (env.RAZORPAY_KEY_ID || '').trim(),
+  razorpayKeySecret: (env.RAZORPAY_KEY_SECRET || '').trim(),
+  razorpayWebhookSecret: (env.RAZORPAY_WEBHOOK_SECRET || '').trim(),
   // 'console' prints emails (renewal reminders etc.) to the server log. Development only.
   emailProvider: env.EMAIL_PROVIDER || 'console',
   // Google OAuth 2.0 (optional; enables "Continue with Google").
